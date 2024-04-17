@@ -49,22 +49,24 @@ class Word5Finder(toga.App):
         self.label_notation = toga.Label("", style=Pack(padding=5))
         self.main_container.add(self.label_notation)
 
-        self.list_result = toga.MultilineTextInput(style=Pack(padding=5, flex=1))
+        self.list_result = toga.MultilineTextInput(readonly=True, style=Pack(padding=5, flex=1))
         self.main_container.add(self.list_result)
 
         self.main_window.content = self.main_container
         self.main_window.show()
+
+    def validate_numbers(self, widget):
+        input_text = widget.value
+        input_text = re.sub(r'[^0-9]', '', input_text)
+        widget.value = input_text.lower()
+        self.find_word(widget)
 
     def validate_letters(self, widget):
         input_text = widget.value
         input_text = re.sub(r'[^а-яА-Я]', '', input_text)
         input_text = re.sub(r'ёЁ', 'е', input_text)
         widget.value = input_text.lower()
-
-    def validate_numbers(self, widget):
-        input_text = widget.value
-        input_text = re.sub(r'[^0-9]', '', input_text)
-        widget.value = input_text.lower()
+        self.find_word(widget)
 
     def validate_lettersANDnumbers(self, widget):
         input_text = widget.value
@@ -72,6 +74,7 @@ class Word5Finder(toga.App):
         input_text = re.sub(r'\s+', ' ', input_text)
         input_text = re.sub(r'ёЁ', 'е', input_text)
         widget.value = input_text.lower()
+        self.find_word(widget)
 
     def load_words(self, widget):
         self.label_notation.text = "Загрузка слов ..."
