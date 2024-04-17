@@ -23,7 +23,7 @@ class Word5Finder(toga.App):
         self.entry_absent_letters = toga.TextInput(placeholder="Отсутствующие буквы", style=Pack(padding=(5, 5)))
         self.main_container.add(self.entry_absent_letters)
 
-        self.entry_known_letters = toga.TextInput(placeholder="Известные буквы и позиция (через пробел)", style=Pack(padding=(5, 5)))
+        self.entry_known_letters = toga.TextInput(placeholder="Известные буквы и позиция через пробел, для разделения запятая (а 2, е 4)", style=Pack(padding=(5, 5)))
         self.main_container.add(self.entry_known_letters)
 
         self.button_search = toga.Button("Поиск", on_press=self.find_word, style=Pack(padding=(5, 5)))
