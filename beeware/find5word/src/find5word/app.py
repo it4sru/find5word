@@ -6,15 +6,19 @@ import requests
 
 class Word5Finder(toga.App):
     def startup(self):
+        # Создаем главное окно
         self.main_window = toga.MainWindow(title=self.formal_name, size=(300, 600))
         self.main_container = toga.Box(style=Pack(direction=COLUMN, padding=5))
 
+        # Создаем кнопку для загрузки слов
         self.button_load = toga.Button("Загрузить слова", on_press=self.load_words, style=Pack(padding=5))
         self.main_container.add(self.button_load)
 
+        # Создаем метку для инструкций
         self.label_instructions = toga.Label("Введите параметры поиска:", style=Pack(padding=5))
         self.main_container.add(self.label_instructions)
 
+        # Создаем поле для ввода количества букв в слове
         self.entry_length = toga.TextInput(
             placeholder="Количество букв в слове", 
             style=Pack(padding=5),
@@ -22,6 +26,7 @@ class Word5Finder(toga.App):
         )
         self.main_container.add(self.entry_length)
 
+        # Создаем поле для ввода присутствующих букв в слове
         self.entry_present_letters = toga.TextInput(
             placeholder="Присутствующие буквы в слове", 
             style=Pack(padding=5),
@@ -29,6 +34,7 @@ class Word5Finder(toga.App):
         )
         self.main_container.add(self.entry_present_letters)
 
+        # Создаем поле для ввода отсутствующих букв в слове
         self.entry_absent_letters = toga.TextInput(
             placeholder="Отсутствующие буквы в слове", 
             style=Pack(padding=5),
@@ -36,6 +42,7 @@ class Word5Finder(toga.App):
         )
         self.main_container.add(self.entry_absent_letters)
 
+        # Создаем поле для ввода известных букв и их позиций
         self.entry_known_letters = toga.TextInput(
             placeholder="Известные буквы и позиция по возрастанию (а2 е4)", 
             style=Pack(padding=5),
@@ -43,24 +50,30 @@ class Word5Finder(toga.App):
         )
         self.main_container.add(self.entry_known_letters)
 
+        # Создаем кнопку для поиска слов
         self.button_search = toga.Button("Поиск", on_press=self.find_word, style=Pack(padding=5))
         self.main_container.add(self.button_search)
 
+        # Создаем метку для уведомлений
         self.label_notation = toga.Label("", style=Pack(padding=5))
         self.main_container.add(self.label_notation)
 
+        # Создаем поле для вывода результатов
         self.list_result = toga.MultilineTextInput(readonly=True, style=Pack(padding=5, flex=1))
         self.main_container.add(self.list_result)
 
+        # Добавляем контейнер в главное окно
         self.main_window.content = self.main_container
         self.main_window.show()
 
+    # Функция для валидации чисел
     def validate_numbers(self, widget):
         input_text = widget.value
         input_text = re.sub(r'[^0-9]', '', input_text)
         widget.value = input_text.lower()
         self.find_word(widget)
 
+    # Функция для валидации букв
     def validate_letters(self, widget):
         input_text = widget.value
         input_text = re.sub(r'[^а-яА-Я]', '', input_text)
@@ -68,6 +81,7 @@ class Word5Finder(toga.App):
         widget.value = input_text.lower()
         self.find_word(widget)
 
+    # Функция для валидации букв и чисел
     def validate_lettersANDnumbers(self, widget):
         input_text = widget.value
         input_text = re.sub(r'[^а-яА-Я 0-9]', '', input_text)
@@ -76,6 +90,7 @@ class Word5Finder(toga.App):
         widget.value = input_text.lower()
         self.find_word(widget)
 
+    # Функция для загрузки слов
     def load_words(self, widget):
         self.label_notation.text = "Загрузка слов ..."
         
@@ -91,6 +106,7 @@ class Word5Finder(toga.App):
             self.label_notation.text = "Ошибка загрузки слов"
             return []
             
+    # Функция для поиска слов
     def find_word(self, widget):
         if not self.list_result.value:
             self.label_notation.text = "Загрузите слова"

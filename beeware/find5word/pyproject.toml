@@ -3,7 +3,7 @@
 project_name = "Find5Word"
 bundle = "it4s.ru"
 version = "0.0.1"
-url = "https://ru.it4s/find5word"
+url = "https://it4s.ru/find5word"
 license = "GNU General Public License v3 or later (GPLv3+)"
 author = "Dmitry Solo"
 author_email = "dv@solontsov.ru"
