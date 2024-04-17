@@ -1,52 +1,107 @@
 import toga
+import re
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 import requests
 
 class Word5Finder(toga.App):
     def startup(self):
-        self.main_window = toga.MainWindow(title=self.formal_name, size=(300, 400))
+        self.main_window = toga.MainWindow(title=self.formal_name, size=(300, 600))
         self.main_container = toga.Box(style=Pack(direction=COLUMN, padding=5))
 
-        self.label_notation = toga.Label("Поиск по файлу russian_words.txt", style=Pack(padding=5))
-        self.main_container.add(self.label_notation)
+        self.button_load = toga.Button("Загрузить слова", on_press=self.load_words, style=Pack(padding=5))
+        self.main_container.add(self.button_load)
 
-        self.label_instructions = toga.Label("Введите параметры поиска:", style=Pack(padding=(5, 5)))
+        self.label_instructions = toga.Label("Введите параметры поиска:", style=Pack(padding=5))
         self.main_container.add(self.label_instructions)
 
-        self.entry_length = toga.TextInput(placeholder="Длина слова", style=Pack(padding=(5, 5)))
+        self.entry_length = toga.TextInput(
+            placeholder="Количество букв в слове", 
+            style=Pack(padding=5),
+            on_change=self.validate_numbers
+        )
         self.main_container.add(self.entry_length)
 
-        self.entry_present_letters = toga.TextInput(placeholder="Присутствующие буквы", style=Pack(padding=(5, 5)))
+        self.entry_present_letters = toga.TextInput(
+            placeholder="Присутствующие буквы в слове", 
+            style=Pack(padding=5),
+            on_change=self.validate_letters
+        )
         self.main_container.add(self.entry_present_letters)
 
-        self.entry_absent_letters = toga.TextInput(placeholder="Отсутствующие буквы", style=Pack(padding=(5, 5)))
+        self.entry_absent_letters = toga.TextInput(
+            placeholder="Отсутствующие буквы в слвое", 
+            style=Pack(padding=5),
+            on_change=self.validate_letters
+        )
         self.main_container.add(self.entry_absent_letters)
 
-        self.entry_known_letters = toga.TextInput(placeholder="Известные буквы и позиция через пробел, для разделения запятая (а 2, е 4)", style=Pack(padding=(5, 5)))
+        self.entry_known_letters = toga.TextInput(
+            placeholder="Известные буквы и позиция по возрастанию (а2 е4)", 
+            style=Pack(padding=5),
+            on_change=self.validate_lettersANDnumbers
+        )
         self.main_container.add(self.entry_known_letters)
 
-        self.button_search = toga.Button("Поиск", on_press=self.find_word, style=Pack(padding=(5, 5)))
+        self.button_search = toga.Button("Поиск", on_press=self.find_word, style=Pack(padding=5))
         self.main_container.add(self.button_search)
 
-        self.list_result = toga.DetailedList(style=Pack(padding=(5, 5), flex=1))
+        self.label_notation = toga.Label("", style=Pack(padding=5))
+        self.main_container.add(self.label_notation)
+
+        self.list_result = toga.DetailedList(style=Pack(padding=5, flex=1))
         self.main_container.add(self.list_result)
 
         self.main_window.content = self.main_container
         self.main_window.show()
 
-        self.words = self.load_words()
+    def validate_letters(self, widget):
+        # Получаем введенное значение из поля ввода
+        input_text = widget.value
+        # Заменяем все символы, кроме русских букв, на пустую строку
+        input_text = re.sub(r'[^а-яА-Я]', '', input_text)
+        # Устанавливаем в поле ввода отфильтрованное значение
+        widget.value = input_text.lower()
 
-    def load_words(self):
+    def validate_numbers(self, widget):
+        # Получаем введенное значение из поля ввода
+        input_text = widget.value
+        # Заменяем все символы, кроме цифр, на пустую строку
+        input_text = re.sub(r'[^0-9]', '', input_text)
+        # Устанавливаем в поле ввода отфильтрованное значение
+        widget.value = input_text.lower()
+
+    def validate_lettersANDnumbers(self, widget):
+        # Получаем введенное значение из поля ввода
+        input_text = widget.value
+        # Заменяем все символы, кроме русских букв и цифр, на пустую строку
+        input_text = re.sub(r'[^а-яА-Я 0-9]', '', input_text)
+        # Заменяем последовательности пробелов на один пробел
+        input_text = re.sub(r'\s+', ' ', input_text)
+        # Устанавливаем в поле ввода отфильтрованное значение
+        widget.value = input_text.lower()
+
+    def load_words(self, widget):
+        self.label_notation.text = "Загрузка слов ..."
+        
         url = 'https://raw.githubusercontent.com/it4sru/find5word/main/russian_words.txt'
         response = requests.get(url)
-        if response.status_code == 200:
-            return response.text.splitlines()
-        else:
-            return []
 
+        if response.status_code == 200:
+            self.words = response.text.splitlines()
+            self.list_result.data = self.words
+            self.label_notation.text = f"Загружено {len(self.words)} слов (сущ. ед. числ.)"
+            self.button_load.text = "Повторно загрузить слова"
+        else:
+            self.label_notation.text = "Ошибка загрузки слов"
+            return []
+            
     def find_word(self, widget):
+        if not self.list_result.data:
+            self.label_notation.text = "Загрузите слова"
+            return
         if not any([self.entry_length.value, self.entry_present_letters.value, self.entry_absent_letters.value, self.entry_known_letters.value]):
+            self.label_notation.text = "Введите параметры поиска"
             return
 
         found_words = []
@@ -54,7 +109,7 @@ class Word5Finder(toga.App):
         length = self.entry_length.value and int(self.entry_length.value)
         present_letters = self.entry_present_letters.value.lower()
         absent_letters = self.entry_absent_letters.value.lower()
-        known_letters = [tuple(item.split()) for item in self.entry_known_letters.value.lower().split(',')] if self.entry_known_letters.value else []
+        known_letters = [tuple(item) for item in self.entry_known_letters.value.lower().split(' ')] if self.entry_known_letters.value else []
 
         for line in self.words:
             words = line.split()
@@ -68,6 +123,5 @@ class Word5Finder(toga.App):
 def main():
     return Word5Finder()
 
-# main logic
 if __name__ == '__main__':
     main().main_loop()
