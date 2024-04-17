@@ -30,7 +30,7 @@ class Word5Finder(toga.App):
         self.main_container.add(self.entry_present_letters)
 
         self.entry_absent_letters = toga.TextInput(
-            placeholder="Отсутствующие буквы в слове", 
+            placeholder="Отсутствующие буквы в слвое", 
             style=Pack(padding=5),
             on_change=self.validate_letters
         )
@@ -49,28 +49,36 @@ class Word5Finder(toga.App):
         self.label_notation = toga.Label("", style=Pack(padding=5))
         self.main_container.add(self.label_notation)
 
-        self.list_result = toga.MultilineTextInput(style=Pack(padding=5, flex=1))
+        self.list_result = toga.DetailedList(style=Pack(padding=5, flex=1))
         self.main_container.add(self.list_result)
 
         self.main_window.content = self.main_container
         self.main_window.show()
 
     def validate_letters(self, widget):
+        # Получаем введенное значение из поля ввода
         input_text = widget.value
+        # Заменяем все символы, кроме русских букв, на пустую строку
         input_text = re.sub(r'[^а-яА-Я]', '', input_text)
-        input_text = re.sub(r'ёЁ', 'е', input_text)
+        # Устанавливаем в поле ввода отфильтрованное значение
         widget.value = input_text.lower()
 
     def validate_numbers(self, widget):
+        # Получаем введенное значение из поля ввода
         input_text = widget.value
+        # Заменяем все символы, кроме цифр, на пустую строку
         input_text = re.sub(r'[^0-9]', '', input_text)
+        # Устанавливаем в поле ввода отфильтрованное значение
         widget.value = input_text.lower()
 
     def validate_lettersANDnumbers(self, widget):
+        # Получаем введенное значение из поля ввода
         input_text = widget.value
+        # Заменяем все символы, кроме русских букв и цифр, на пустую строку
         input_text = re.sub(r'[^а-яА-Я 0-9]', '', input_text)
+        # Заменяем последовательности пробелов на один пробел
         input_text = re.sub(r'\s+', ' ', input_text)
-        input_text = re.sub(r'ёЁ', 'е', input_text)
+        # Устанавливаем в поле ввода отфильтрованное значение
         widget.value = input_text.lower()
 
     def load_words(self, widget):
@@ -81,7 +89,7 @@ class Word5Finder(toga.App):
 
         if response.status_code == 200:
             self.words = response.text.splitlines()
-            self.list_result.value = '\n'.join(self.words)
+            self.list_result.data = self.words
             self.label_notation.text = f"Загружено {len(self.words)} слов (сущ. ед. числ.)"
             self.button_load.text = "Повторно загрузить слова"
         else:
@@ -89,27 +97,28 @@ class Word5Finder(toga.App):
             return []
             
     def find_word(self, widget):
-        if not self.list_result.value:
+        if not self.list_result.data:
             self.label_notation.text = "Загрузите слова"
             return
         if not any([self.entry_length.value, self.entry_present_letters.value, self.entry_absent_letters.value, self.entry_known_letters.value]):
             self.label_notation.text = "Введите параметры поиска"
             return
 
-        self.found_words = []
+        found_words = []
 
         length = self.entry_length.value and int(self.entry_length.value)
         present_letters = self.entry_present_letters.value.lower()
         absent_letters = self.entry_absent_letters.value.lower()
         known_letters = [tuple(item) for item in self.entry_known_letters.value.lower().split(' ')] if self.entry_known_letters.value else []
 
-        for word in self.words:
-            if (not length or len(word) == length) and (not present_letters or all(letter in word.lower() for letter in present_letters)) and (not absent_letters or all(letter not in word.lower() for letter in absent_letters)):
-                if not known_letters or all(word[int(pos)-1] == letter for letter, pos in known_letters):
-                    self.found_words.append(word)
+        for line in self.words:
+            words = line.split()
+            for word in words:
+                if (not length or len(word) == length) and (not present_letters or all(letter in word.lower() for letter in present_letters)) and (not absent_letters or all(letter not in word.lower() for letter in absent_letters)):
+                    if not known_letters or all(word[int(pos)-1] == letter for letter, pos in known_letters):
+                        found_words.append(word)
 
-        self.list_result.value = '\n'.join(self.found_words)
-
+        self.list_result.data = found_words
 
 def main():
     return Word5Finder()
