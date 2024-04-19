@@ -61,7 +61,7 @@ class Word5Finder(toga.App):
         self.label_entry_known_letters = toga.Label("Буквы позиция которых известна:", style=Pack(padding=(0, 5)))
         self.main_container.add(self.label_entry_known_letters)
         self.entry_known_letters = toga.TextInput(
-            placeholder="введите буквы заменяя неизвестные буквы на *", 
+            placeholder="введите буквы заменяя неизвестные на *", 
             style=Pack(padding=(0, 5, 10, 5)),
             on_change=self.validate_lettersANDnumbers,
             readonly=True  # Поле не активно до загрузки слов
